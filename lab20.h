@@ -54,6 +54,7 @@ Unit::Unit(string t,string n){
 	}
 	hp = hpmax;	
 	guard_on = false;
+	dodge_on = false;
 	equipment = NULL;
 }
 
@@ -72,25 +73,49 @@ void Unit::showStatus(){
 	}
 }
 
-void Unit::newTurn(){
-	guard_on = false; 
+void Unit::dodge(){
+	dodge_on = true;
 }
 
+Equipment::Equipment(int h, int a, int d){
+	atk = a;
+	def = d;
+	hpmax = h;
+} //intialize attack, defense, and hpmax
+
+vector<int> Equipment::getStat(){
+	return{hpmax, atk, def};
+} //return orkmapen vector
+
+void Unit::newTurn(){
+	guard_on = false; 
+	dodge_on = false;
+}//reset the guard and dodge status torn kuen turn mai
+
+//battle mechanics
 int Unit::beAttacked(int oppatk){
-	int dmg;
-	if(oppatk > def){
-		dmg = oppatk-def;	
-		if(guard_on) dmg = dmg/3;
-	}	
+	int dmg = oppatk-def;
+	if(dmg < 0) dmg = 0;
+	if(guard_on)dmg /= 3;
+	if(dodge_on){
+		if(rand()%2 == 0){
+			dmg = 0;
+		}else{
+			dmg*=2;
+		}
+	}
 	hp -= dmg;
-	if(hp <= 0){hp = 0;}
-	
+	if(hp<0) hp = 0;
 	return dmg;	
-}
+}// added dodge thingy and add the negative damage prevention thingy duay
 
 int Unit::attack(Unit &opp){
 	return opp.beAttacked(atk);
 }
+
+int Unit::ultimateAttack(Unit &opp){
+    return opp.beAttacked(atk *2);
+}// ultimate attack will make twice the normal damage ja
 
 int Unit::heal(){
 	int h = rand()%21 + 10;
@@ -107,6 +132,25 @@ bool Unit::isDead(){
 	if(hp <= 0) return true;
 	else return false;
 }
+
+void Unit::equip(Equipment *newEquips){
+	if(equipment != NULL){
+		vector<int> oldStats = equipment->getStat();
+		hpmax -= oldStats[0];
+		atk -= oldStats[1];
+		def -= oldStats[2];
+
+		if(hp > hpmax) hp=hpmax;
+
+	}
+	equipment = newEquips;
+	vector<int> newStats = newEquips->getStat();
+	hpmax += newStats[0];
+	atk += newStats[1];
+	def += newStats[2];
+
+	if(hp > hpmax) hp=hpmax;
+} // ta mee equipped already ja remove oldstats and then equips newstat + adjust hp ta mee makkwa hpmax
 
 void drawScene(char p_action,int p,char m_action,int m){
 	cout << "                                                       \n";
